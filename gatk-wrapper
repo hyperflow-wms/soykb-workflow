@@ -1,9 +1,5 @@
 #!/bin/bash
 
-if [ ! -d software ]; then
-    tar xzf software.tar.gz
-fi
-
 export TMPDIR=`pwd`
 
 OUTFILE=`mktemp -t gatk-output.XXXXXXXXXX` || exit 1
@@ -18,7 +14,7 @@ OPTIONS="-Xmx2g -XX:+UseSerialGC"
 OPTIONS="$OPTIONS -Djava.io.tmpdir=$TMPDIR"
 
 java $OPTIONS \
-     -jar ./software/GenomeAnalysisTK-3.0.0/GenomeAnalysisTK.jar \
+     -jar /soykb/software/GenomeAnalysisTK-3.0.0/GenomeAnalysisTK.jar \
      "$@" \
      >$OUTFILE 2>&1
 EXITCODE=$?
@@ -30,7 +26,7 @@ if [ "x$EXITCODE" != "x0" ]; then
         echo
         echo "Rerunning with --fix_misencoded_quality_scores..."
         java $OPTIONS \
-             -jar ./software/GenomeAnalysisTK-3.0.0/GenomeAnalysisTK.jar \
+             -jar /soykb/software/GenomeAnalysisTK-3.0.0/GenomeAnalysisTK.jar \
              "$@" \
              --fix_misencoded_quality_scores \
              >$OUTFILE 2>&1

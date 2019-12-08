@@ -11,4 +11,4 @@ COPY software.tar.gz .
 RUN tar zxvf software.tar.gz
 RUN chmod +x software/bwa-0.7.4/bwa
 COPY *-wrapper ./
-ENV PATH="/soykb:${PATH}"
+ENV PATH="/soykb:${PATH}":/node_modules/.bin

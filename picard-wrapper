@@ -2,9 +2,5 @@
 
 set -e
 
-if [ ! -d software ]; then
-    tar xzf software.tar.gz
-fi
-
-java -Xmx2g -XX:+UseSerialGC -jar ./software/picard-tools-1.92/"$@"
+java -Xmx2g -XX:+UseSerialGC -jar /soykb/software/picard-tools-1.92/"$@"
 
