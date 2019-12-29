@@ -1,9 +1,6 @@
 TAG = $(shell git describe --tags --always)
-# PREFIX = $(shell git config --get remote.origin.url | tr ':.' '/'  | rev | cut -d '/' -f 3 | rev)
-# REPO_NAME = $(shell git config --get remote.origin.url | tr ':.' '/'  | rev | cut -d '/' -f 2 | rev)
-
-REPO_NAME = 'soykb-worker'
-PREFIX = 'hyperflowwms'
+PREFIX = hyperflowwms
+REPO_NAME = soykb-worker
 
 all: push
 
