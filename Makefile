@@ -1,6 +1,6 @@
 TAG = $(shell git describe --tags --always)
 PREFIX = hyperflowwms
-REPO_NAME = soykb-worker
+REPO_NAME = soykb-workflow-worker
 
 all: push
 
