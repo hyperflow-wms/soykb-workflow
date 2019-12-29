@@ -1,5 +1,7 @@
 # Soykb workflow for HyperFlow
 
+[![](https://images.microbadger.com/badges/version/hyperflowwms/soykb-workflow-worker.svg)](https://microbadger.com/images/hyperflowwms/soykb-workflow-worker "Get your own version badge on microbadger.com")
+
 ## Build and publish image
 HyperFlow Docker image contains Soykb binaries and HyperFlow job executor
 - `make` -- build the container and push to Docker Hub
