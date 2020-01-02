@@ -21,8 +21,4 @@ All files will be generated in the `input` directory. Please note that running t
 
 ## Running in a Kubernetes cluster
 
-On the container where the HyperFlow engine is running, define the following environment variable:
-```
-HF_VAR_function="k8sCommand"
-```
-TODO
+To run the workflow on a Kubernetes cluster, you can use the [HyperFlow-k8s-deployment project](https://github.com/hyperflow-wms/hyperflow-k8s-deployment). 
