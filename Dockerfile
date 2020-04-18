@@ -5,8 +5,8 @@ ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.11
 
 RUN apk --update add openjdk7-jre \
  && apk add curl bash npm \
- && apk add  --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.9/main/ nodejs=10.14.2-r0 \
- && apk add python3 libpcap libpcap-dev
+ && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.9/main/ nodejs=10.14.2-r0 \
+ && apk add python3 libpcap libpcap-dev util-linux
 
 RUN npm install -g https://github.com/hyperflow-wms/hyperflow-job-executor/archive/${HYPERFLOW_JOB_EXECUTOR_VERSION}.tar.gz
 
