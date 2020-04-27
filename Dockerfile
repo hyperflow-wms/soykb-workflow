@@ -21,5 +21,6 @@ COPY software/nethogs-wrapper.py /usr/local/bin
 RUN chmod +x /usr/local/bin/nethogs-wrapper.py
 
 RUN curl https://github.com/cano112/fbam/releases/download/${FBAM_VERSION}/libblockaccess.so.${FBAM_VERSION} --create-dirs -o /fbam/libfbam.so
+RUN touch /tmp/file_access.log
 
 ENV PATH="/soykb:${PATH}"
