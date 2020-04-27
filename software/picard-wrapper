@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+export TMPDIR=`pwd`
 
-java -Xmx2g -XX:+UseSerialGC -jar /soykb/software/picard-tools-1.92/"$@"
+java -Djava.io.tmpdir=$TMPDIR -Xmx15g -XX:+UseSerialGC -jar /soykb/software/picard-tools-1.92/"$@"
 

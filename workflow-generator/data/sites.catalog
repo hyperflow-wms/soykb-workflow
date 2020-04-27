@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="data/scratch">
+            <file-server operation="all" url="scp://ArchZenBookdata/scratch"/>
+        </directory>
+        <directory type="local-storage" path="data/outputs">
+            <file-server operation="all" url="scp://ArchZenBookdata/outputs"/>
+        </directory>
+        <profile namespace="env" key="PATH">pegasus_bin_dir:irods_bin:/usr/bin:/bin</profile>
+        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/home/mateusz/.ssh/workflow</profile>
+    </site>
+    <site  handle="execution" arch="x86_64" os="LINUX">
+        <grid  type="gt5" contact="login5.stampede.tacc.utexas.edu:2119/jobmanager-slurm" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt5" contact="login5.stampede.tacc.utexas.edu:2119/jobmanager-slurm" scheduler="Condor" jobtype="compute"/>
+        <directory type="shared-scratch" path="/scratch/00384/rynge/workflow-runs">
+            <file-server operation="all" url="gsiftp://gridftp.stampede.tacc.xsede.org:2811/scratch/00384/rynge/workflow-runs"/>
+        </directory>
+        <profile namespace="pegasus" key="job.aggregator">mpiexec</profile>
+        <profile namespace="env" key="PEGASUS_HOME">/home1/00384/rynge/software/pegasus/4.4.0cvs</profile>
+        <profile namespace="env" key="PATH">/home1/00384/rynge/software/pegasus/4.4.0cvs/bin:/home1/00384/rynge/software/irods/3.2/bin:/scratch/projects/xsede/globus-5.0.4-r1/bin:/usr/bin:/bin</profile>
+        <profile namespace="env" key="LD_LIBRARY_PATH">/scratch/projects/xsede/globus-5.0.4-r1/lib</profile>
+        <profile namespace="env" key="TMPDIR_OVERRIDE">/tmp</profile>
+        <profile namespace="globus" key="project">TG-ABC1234</profile>
+    </site>
+    <site  handle="irods_iplant" arch="x86_64" os="LINUX">
+        <directory type="local-storage" path="/iplant/home/shared/digbio/Pegasus_GATK_Results/Output_DIR/mateusz">
+            <file-server operation="all" url="irods:///iplant/home/shared/digbio/Pegasus_GATK_Results/Output_DIR/mateusz" />
+        </directory>
+        <profile namespace="pegasus" key="irodsEnvFile" >/home/mateusz/irods.iplant.env</profile>
+    </site>
+    <site  handle="isi_workflow" arch="x86_64" os="LINUX">
+        <directory type="local-storage" path="/local-scratch/http/mateusz/soykb/outputs">
+            <file-server operation="get" url="http://workflow.isi.edu/scratch/mateusz/soykb/outputs"/>
+            <file-server operation="put" url="scp://mateusz@workflow.isi.edu/local-scratch/http/mateusz/soykb/outputs"/>
+        </directory>
+	    <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/home/mateusz/.ssh/workflow</profile>
+    </site>
+</sitecatalog>
+

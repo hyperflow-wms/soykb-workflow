@@ -1,6 +1,16 @@
 # Soykb workflow for HyperFlow
 
 [![](https://images.microbadger.com/badges/version/hyperflowwms/soykb-workflow-worker.svg)](https://microbadger.com/images/hyperflowwms/soykb-workflow-worker "Get your own version badge on microbadger.com")
+## Generate example workflows
+
+Generate example workflow:
+- `genwf-size2.sh` (size 2)
+
+The scripts invoke Docker images and create:
+- `data` subdirectory with workflow `workflow.json` and `haplotype-files.list`
+
+You can also directly use the `hyperflowwms/soykb-generator` image to generate other workflows, see the scripts for command examples. For example, to generate smaller workflows, use a smaller value of the fastq files parameter.
+
 
 ## Build and publish image
 HyperFlow Docker image contains Soykb binaries and HyperFlow job executor

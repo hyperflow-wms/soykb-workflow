@@ -1,0 +1,16 @@
+#!/bin/sh
+if [ $# -eq 0 ]; then
+    echo -e "Usage: generate-workflow <size of workflow>\nSize should be divisible by 2 for this configuration of soykb."
+    exit 1
+fi
+# if [ -d "/workdir" ]; then
+#     echo "Installing config files in /workdir..."
+# else
+#     # exit 1
+# fi
+
+python2 fillFastqFile.py -p inputs-fastq.txt -s $1
+python2 workflow-generator --exec-env  tacc-stampede && hflow-convert-dax data/soykb.dax > data/workflow.json
+python2 editWorkflow.py -p data/workflow.json -n soykb -v 1.0.0
+
+# mv data /workdir/
