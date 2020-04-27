@@ -1,4 +1,4 @@
-FROM alpine:3.9
+FROM spritsail/alpine-cmake:3.9
 MAINTAINER Bartosz Balis <balis@agh.edu.pl>
 
 ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.11
@@ -11,6 +11,11 @@ RUN apk --update add openjdk7-jre \
 
 RUN npm install -g https://github.com/hyperflow-wms/hyperflow-job-executor/archive/${HYPERFLOW_JOB_EXECUTOR_VERSION}.tar.gz
 
+RUN curl https://github.com/cano112/fbam/archive/${FBAM_VERSION}.tar.gz --create-dirs -o /fbam.tar.gz
+RUN tar zxvf /fbam.tar.gz
+RUN fbam-${FBAM_VERSION}/build.sh
+RUN touch /tmp/file_access.log
+
 WORKDIR /soykb
 COPY software/software.tar.gz .
 RUN tar zxvf software.tar.gz
@@ -20,7 +25,5 @@ COPY software/libnethogs.so.0.8.5-63-g68033bf /usr/local/lib
 COPY software/nethogs-wrapper.py /usr/local/bin 
 RUN chmod +x /usr/local/bin/nethogs-wrapper.py
 
-RUN curl https://github.com/cano112/fbam/releases/download/${FBAM_VERSION}/libblockaccess.so.${FBAM_VERSION} --create-dirs -o /fbam/libfbam.so
-RUN touch /tmp/file_access.log
 
 ENV PATH="/soykb:${PATH}"
