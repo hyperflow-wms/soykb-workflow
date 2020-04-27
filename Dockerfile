@@ -2,6 +2,7 @@ FROM alpine:3.9
 MAINTAINER Bartosz Balis <balis@agh.edu.pl>
 
 ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.11
+ENV FBAM_VERSION=0.0.1
 
 RUN apk --update add openjdk7-jre \
  && apk add curl bash npm \
@@ -18,5 +19,7 @@ COPY software/*-wrapper ./
 COPY software/libnethogs.so.0.8.5-63-g68033bf /usr/local/lib
 COPY software/nethogs-wrapper.py /usr/local/bin 
 RUN chmod +x /usr/local/bin/nethogs-wrapper.py
+
+RUN curl https://github.com/cano112/fbam/releases/download/${FBAM_VERSION}/libblockaccess.so.${FBAM_VERSION} --create-dirs -o /fbam/libfbam.so
 
 ENV PATH="/soykb:${PATH}"
