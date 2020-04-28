@@ -11,10 +11,14 @@ RUN apk --update add openjdk7-jre \
 
 RUN npm install -g https://github.com/hyperflow-wms/hyperflow-job-executor/archive/${HYPERFLOW_JOB_EXECUTOR_VERSION}.tar.gz
 
-RUN curl https://github.com/cano112/fbam/archive/${FBAM_VERSION}.tar.gz --create-dirs -o /fbam.tar.gz
-RUN tar zxvf /fbam.tar.gz
-RUN fbam-${FBAM_VERSION}/build.sh
-RUN touch /tmp/file_access.log
+RUN wget https://github.com/cano112/fbam/archive/${FBAM_VERSION}.tar.gz
+RUN tar zxvf ${FBAM_VERSION}.tar.gz 
+WORKDIR fbam-${FBAM_VERSION}
+RUN chmod +x ./build.sh
+RUN ./build.sh
+RUN mkdir /fbam
+RUN touch /fbam/file_access.log
+RUN cp -r ./build/libblockaccess.so.${FBAM_VERSION} /fbam/libfbam.so
 
 WORKDIR /soykb
 COPY software/software.tar.gz .
