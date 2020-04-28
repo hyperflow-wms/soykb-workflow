@@ -17,7 +17,6 @@ WORKDIR fbam-${FBAM_VERSION}
 RUN chmod +x ./build.sh
 RUN ./build.sh
 RUN mkdir /fbam
-RUN touch /fbam/file_access.log
 RUN cp -r ./build/libblockaccess.so.${FBAM_VERSION} /fbam/libfbam.so
 
 WORKDIR /soykb
