@@ -3,7 +3,7 @@ TAG = $(shell git describe --tags --always)
 # REPO_NAME = $(shell git config --get remote.origin.url | tr ':.' '/'  | rev | cut -d '/' -f 2 | rev)
 
 REPO_NAME = 'soykb-worker'
-PREFIX = 'matplinta'
+PREFIX = 'hyperflowwms'
 
 all: push
 
