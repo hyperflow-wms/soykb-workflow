@@ -21,6 +21,7 @@ RUN chmod +x /usr/local/bin/nethogs-wrapper.py
 ENV PATH="/soykb:${PATH}"
 
 # ADD FILE BLOCK ACCESS MONITORING LIBRARY (FBAM)
+WORKDIR /
 ENV FBAM_VERSION=0.1
 RUN wget https://github.com/cano112/fbam/archive/${FBAM_VERSION}.tar.gz
 RUN tar zxvf ${FBAM_VERSION}.tar.gz 
