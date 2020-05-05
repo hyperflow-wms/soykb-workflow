@@ -1,19 +1,23 @@
-FROM alpine:3.9
-MAINTAINER Bartosz Balis <balis@agh.edu.pl>
+FROM archlinux
+MAINTAINER Mateusz Plinta
 
-ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.11
+ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.13
 
-RUN apk --update add openjdk7-jre \
- && apk add curl bash npm \
- && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.9/main/ nodejs=10.14.2-r0 \
- && apk add python3 libpcap libpcap-dev util-linux
+RUN pacman -Sy 
+RUN pacman -S --needed --noconfirm git jre7-openjdk npm python3 libpcap util-linux base-devel libffi glibc lib32-glibc 
+
+RUN pacman -S --needed --noconfirm sudo
+RUN useradd builduser -m
+RUN passwd -d builduser
+RUN printf 'builduser ALL=(ALL) ALL\n' | tee -a /etc/sudoers
+RUN sudo -u builduser bash -c 'cd ~ && git clone https://aur.archlinux.org/ncurses5-compat-libs.git && cd ncurses5-compat-libs && makepkg -si --skippgpcheck --noconfirm'
+RUN sudo -u builduser bash -c 'cd ~ && git clone https://aur.archlinux.org/libffi6.git && cd libffi6 && makepkg -si --noconfirm'
 
 RUN npm install -g https://github.com/hyperflow-wms/hyperflow-job-executor/archive/${HYPERFLOW_JOB_EXECUTOR_VERSION}.tar.gz
 
 WORKDIR /soykb
 COPY software/software.tar.gz .
 RUN tar zxvf software.tar.gz
-RUN chmod +x software/bwa-0.7.4/bwa
 COPY software/*-wrapper ./
 COPY software/libnethogs.so.0.8.5-63-g68033bf /usr/local/lib
 COPY software/nethogs-wrapper.py /usr/local/bin 

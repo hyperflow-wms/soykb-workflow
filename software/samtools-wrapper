@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+
+export TMPDIR=`pwd`
+
+# sometimes we are asked to "merge" only one file
+if [ "X$1" = "Xmerge" -a "X$4" = "X" ]; then
+    # just copy
+    cp "$3" "$2"
+    exit 0
+fi
+
+/soykb/software/samtools-1.0/samtools "$@"
+
