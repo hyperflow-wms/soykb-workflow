@@ -2,5 +2,7 @@
 
 set -e
 
+export TMPDIR=`pwd`
+
 /soykb/software/bwa-0.7.4/bwa "$@"
 

@@ -1,0 +1,2 @@
+http://workflow.isi.edu/SoyKB/sample-inputs-3/USB-001_1.fastq
+http://workflow.isi.edu/SoyKB/sample-inputs-3/USB-001_2.fastq
