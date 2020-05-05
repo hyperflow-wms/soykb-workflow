@@ -1,10 +1,10 @@
 FROM archlinux
 MAINTAINER Mateusz Plinta
 
-ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.12
+ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.13
 
 RUN pacman -Sy 
-RUN pacman -S --needed --noconfirm git jre7-openjdk npm python3 libpcap util-linux base-devel libffi
+RUN pacman -S --needed --noconfirm git jre7-openjdk npm python3 libpcap util-linux base-devel libffi glibc lib32-glibc 
 
 RUN pacman -S --needed --noconfirm sudo
 RUN useradd builduser -m
