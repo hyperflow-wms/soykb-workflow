@@ -1,11 +1,12 @@
-FROM spritsail/alpine-cmake:3.9
+FROM alpine:3.12
 MAINTAINER Bartosz Balis <balis@agh.edu.pl>
 
 ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.16
+ENV NODE_VERSION=12.17.0-r0
 
 RUN apk --update add openjdk7-jre \
- && apk add curl bash npm \
- && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.9/main/ nodejs=10.14.2-r0 \
+ && apk add curl bash \
+ && apk add npm=$NODE_VERSION nodejs=$NODE_VERSION \
  && apk add python3 libpcap libpcap-dev util-linux
 
 RUN npm install -g https://github.com/hyperflow-wms/hyperflow-job-executor/archive/${HYPERFLOW_JOB_EXECUTOR_VERSION}.tar.gz
@@ -22,6 +23,7 @@ ENV PATH="/soykb:${PATH}"
 
 # ADD FILE BLOCK ACCESS MONITORING LIBRARY (FBAM)
 WORKDIR /
+RUN apk --no-cache add cmake clang clang-dev make gcc g++ libc-dev linux-headers
 ENV FBAM_VERSION=0.4.1
 RUN wget https://github.com/cano112/fbam/archive/${FBAM_VERSION}.tar.gz
 RUN tar zxvf ${FBAM_VERSION}.tar.gz 
