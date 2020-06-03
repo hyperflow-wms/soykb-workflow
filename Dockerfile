@@ -1,7 +1,7 @@
 FROM spritsail/alpine-cmake:3.9
 MAINTAINER Bartosz Balis <balis@agh.edu.pl>
 
-ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.11
+ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.16
 
 RUN apk --update add openjdk7-jre \
  && apk add curl bash npm \
