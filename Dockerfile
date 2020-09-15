@@ -1,15 +1,19 @@
 FROM alpine:3.12
 MAINTAINER Bartosz Balis <balis@agh.edu.pl>
 
-ENV HYPERFLOW_JOB_EXECUTOR_VERSION=v1.0.16
-ENV NODE_VERSION=12.17.0-r0
+# Version of the job executor should be passed via docker build, e.g.: 
+# docker build --build-arg hf_job_executor_version="1.1.0""
+ARG hf_job_executor_version
+ENV HYPERFLOW_JOB_EXECUTOR_VERSION=$hf_job_executor_version
+
+ENV NODE_VERSION=12.18.3-r0
 
 RUN apk --update add openjdk7-jre \
  && apk add curl bash \
  && apk add npm=$NODE_VERSION nodejs=$NODE_VERSION \
  && apk add python3 libpcap libpcap-dev util-linux
 
-RUN npm install -g https://github.com/hyperflow-wms/hyperflow-job-executor/archive/${HYPERFLOW_JOB_EXECUTOR_VERSION}.tar.gz
+RUN npm install -g @hyperflow/job-executor@${HYPERFLOW_JOB_EXECUTOR_VERSION}
 
 WORKDIR /soykb
 COPY software/software.tar.gz .
