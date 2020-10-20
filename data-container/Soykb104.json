@@ -1,0 +1,5735 @@
+{
+  "name": "Soykb104",
+  "functions": [
+    {
+      "name": "command",
+      "module": "functions"
+    }
+  ],
+  "ins": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    63,
+    64,
+    115,
+    116,
+    167
+  ],
+  "outs": [
+    168,
+    169,
+    210,
+    213,
+    214,
+    216,
+    217
+  ],
+  "processes": [
+    {
+      "name": "alignment_to_reference",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "bwa-wrapper",
+          "args": [
+            "mem",
+            "-t",
+            "2",
+            "-M",
+            "/data/Gmax_275_v2.0.fa",
+            "/data/USB-001_1.fastq",
+            "/data/USB-001_2.fastq"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        13
+      ]
+    },
+    {
+      "name": "sort_sam",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "picard-wrapper",
+          "args": [
+            "SortSam.jar",
+            "CREATE_INDEX=TRUE",
+            "MAX_RECORDS_IN_RAM=5000000",
+            "TMP_DIR=.",
+            "I=20180318-115124-USB-001_aligned_reads.sam",
+            "O=20180318-115124-USB-001_sorted_reads.bam",
+            "SO=coordinate",
+            "VALIDATION_STRINGENCY=LENIENT"
+          ]
+        }
+      },
+      "ins": [
+        10,
+        13
+      ],
+      "outs": [
+        14,
+        15
+      ]
+    },
+    {
+      "name": "dedup",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "picard-wrapper",
+          "args": [
+            "MarkDuplicates.jar",
+            "CREATE_INDEX=TRUE",
+            "MAX_RECORDS_IN_RAM=5000000",
+            "TMP_DIR=.",
+            "I=20180318-115124-USB-001_sorted_reads.bam",
+            "O=20180318-115124-USB-001_deduped_reads.bam",
+            "METRICS_FILE=20180318-115124-USB-001_deduped.metrics",
+            "VALIDATION_STRINGENCY=LENIENT"
+          ]
+        }
+      },
+      "ins": [
+        10,
+        14,
+        15
+      ],
+      "outs": [
+        16,
+        17
+      ]
+    },
+    {
+      "name": "add_replace",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "picard-wrapper",
+          "args": [
+            "AddOrReplaceReadGroups.jar",
+            "MAX_RECORDS_IN_RAM=5000000",
+            "TMP_DIR=.",
+            "I=20180318-115124-USB-001_deduped_reads.bam",
+            "O=20180318-115124-USB-001_addrepl.bam",
+            "RGID=USB-001",
+            "LB=USB-001",
+            "PL=Illumina",
+            "SM=USB-001",
+            "CN=BGI",
+            "RGPU=USB-001",
+            "VALIDATION_STRINGENCY=LENIENT",
+            "SORT_ORDER=coordinate",
+            "CREATE_INDEX=TRUE"
+          ]
+        }
+      },
+      "ins": [
+        10,
+        16,
+        17
+      ],
+      "outs": [
+        18,
+        19
+      ]
+    },
+    {
+      "name": "realign_target_creator",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "RealignerTargetCreator",
+            "-nt",
+            "2",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_addrepl.bam",
+            "-o",
+            "20180318-115124-USB-001_intervals.list"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        19,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        18,
+        12
+      ],
+      "outs": [
+        20
+      ]
+    },
+    {
+      "name": "indel_realign",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "IndelRealigner",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_addrepl.bam",
+            "-targetIntervals",
+            "20180318-115124-USB-001_intervals.list",
+            "-o",
+            "20180318-115124-USB-001_indel_realigned.bam"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        19,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        20,
+        11,
+        18,
+        12
+      ],
+      "outs": [
+        21,
+        22
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr01",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr01.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        23,
+        24
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr02",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr02.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        25,
+        26
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr03",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr03.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        27,
+        28
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr04",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr04.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        29,
+        30
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr05",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr05.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        31,
+        32
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr06",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr06.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        33,
+        34
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr07",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr07.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        35,
+        36
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr08",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr08.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        37,
+        38
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr09",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr09.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        39,
+        40
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr10",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr10.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        41,
+        42
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr11",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr11.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        43,
+        44
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr12",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr12.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        45,
+        46
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr13",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr13.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        47,
+        48
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr14",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr14.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        49,
+        50
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr15",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr15.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        51,
+        52
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr16",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr16.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        53,
+        54
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr17",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr17.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        55,
+        56
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr18",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr18.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        57,
+        58
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr19",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr19.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        59,
+        60
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr20",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-001_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-001_Chr20.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        21,
+        22,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        61,
+        62
+      ]
+    },
+    {
+      "name": "alignment_to_reference",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "bwa-wrapper",
+          "args": [
+            "mem",
+            "-t",
+            "2",
+            "-M",
+            "/data/Gmax_275_v2.0.fa",
+            "/data/USB-002_1.fastq",
+            "/data/USB-002_2.fastq"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        63,
+        6,
+        7,
+        64,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        65
+      ]
+    },
+    {
+      "name": "sort_sam",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "picard-wrapper",
+          "args": [
+            "SortSam.jar",
+            "CREATE_INDEX=TRUE",
+            "MAX_RECORDS_IN_RAM=5000000",
+            "TMP_DIR=.",
+            "I=20180318-115124-USB-002_aligned_reads.sam",
+            "O=20180318-115124-USB-002_sorted_reads.bam",
+            "SO=coordinate",
+            "VALIDATION_STRINGENCY=LENIENT"
+          ]
+        }
+      },
+      "ins": [
+        10,
+        65
+      ],
+      "outs": [
+        66,
+        67
+      ]
+    },
+    {
+      "name": "dedup",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "picard-wrapper",
+          "args": [
+            "MarkDuplicates.jar",
+            "CREATE_INDEX=TRUE",
+            "MAX_RECORDS_IN_RAM=5000000",
+            "TMP_DIR=.",
+            "I=20180318-115124-USB-002_sorted_reads.bam",
+            "O=20180318-115124-USB-002_deduped_reads.bam",
+            "METRICS_FILE=20180318-115124-USB-002_deduped.metrics",
+            "VALIDATION_STRINGENCY=LENIENT"
+          ]
+        }
+      },
+      "ins": [
+        10,
+        66,
+        67
+      ],
+      "outs": [
+        68,
+        69
+      ]
+    },
+    {
+      "name": "add_replace",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "picard-wrapper",
+          "args": [
+            "AddOrReplaceReadGroups.jar",
+            "MAX_RECORDS_IN_RAM=5000000",
+            "TMP_DIR=.",
+            "I=20180318-115124-USB-002_deduped_reads.bam",
+            "O=20180318-115124-USB-002_addrepl.bam",
+            "RGID=USB-002",
+            "LB=USB-002",
+            "PL=Illumina",
+            "SM=USB-002",
+            "CN=BGI",
+            "RGPU=USB-002",
+            "VALIDATION_STRINGENCY=LENIENT",
+            "SORT_ORDER=coordinate",
+            "CREATE_INDEX=TRUE"
+          ]
+        }
+      },
+      "ins": [
+        68,
+        10,
+        69
+      ],
+      "outs": [
+        70,
+        71
+      ]
+    },
+    {
+      "name": "realign_target_creator",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "RealignerTargetCreator",
+            "-nt",
+            "2",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_addrepl.bam",
+            "-o",
+            "20180318-115124-USB-002_intervals.list"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        70,
+        71,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        72
+      ]
+    },
+    {
+      "name": "indel_realign",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "IndelRealigner",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_addrepl.bam",
+            "-targetIntervals",
+            "20180318-115124-USB-002_intervals.list",
+            "-o",
+            "20180318-115124-USB-002_indel_realigned.bam"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        70,
+        71,
+        10,
+        72,
+        11,
+        12
+      ],
+      "outs": [
+        73,
+        74
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr01",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr01.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        75,
+        76
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr02",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr02.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        77,
+        78
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr03",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr03.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        79,
+        80
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr04",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr04.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        81,
+        82
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr05",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr05.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        83,
+        84
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr06",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr06.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        85,
+        86
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr07",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr07.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        87,
+        88
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr08",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr08.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        89,
+        90
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr09",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr09.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        91,
+        92
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr10",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr10.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        93,
+        94
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr11",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr11.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        95,
+        96
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr12",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr12.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        97,
+        98
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr13",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr13.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        99,
+        100
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr14",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr14.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        101,
+        102
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr15",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr15.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        103,
+        104
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr16",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr16.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        105,
+        106
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr17",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr17.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        107,
+        108
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr18",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr18.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        109,
+        110
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr19",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr19.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        111,
+        112
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr20",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-002_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-002_Chr20.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        74,
+        73,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        113,
+        114
+      ]
+    },
+    {
+      "name": "alignment_to_reference",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "bwa-wrapper",
+          "args": [
+            "mem",
+            "-t",
+            "2",
+            "-M",
+            "/data/Gmax_275_v2.0.fa",
+            "/data/USB-003_1.fastq",
+            "/data/USB-003_2.fastq"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        115,
+        3,
+        4,
+        5,
+        6,
+        7,
+        116,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        117
+      ]
+    },
+    {
+      "name": "sort_sam",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "picard-wrapper",
+          "args": [
+            "SortSam.jar",
+            "CREATE_INDEX=TRUE",
+            "MAX_RECORDS_IN_RAM=5000000",
+            "TMP_DIR=.",
+            "I=20180318-115124-USB-003_aligned_reads.sam",
+            "O=20180318-115124-USB-003_sorted_reads.bam",
+            "SO=coordinate",
+            "VALIDATION_STRINGENCY=LENIENT"
+          ]
+        }
+      },
+      "ins": [
+        10,
+        117
+      ],
+      "outs": [
+        118,
+        119
+      ]
+    },
+    {
+      "name": "dedup",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "picard-wrapper",
+          "args": [
+            "MarkDuplicates.jar",
+            "CREATE_INDEX=TRUE",
+            "MAX_RECORDS_IN_RAM=5000000",
+            "TMP_DIR=.",
+            "I=20180318-115124-USB-003_sorted_reads.bam",
+            "O=20180318-115124-USB-003_deduped_reads.bam",
+            "METRICS_FILE=20180318-115124-USB-003_deduped.metrics",
+            "VALIDATION_STRINGENCY=LENIENT"
+          ]
+        }
+      },
+      "ins": [
+        118,
+        10,
+        119
+      ],
+      "outs": [
+        120,
+        121
+      ]
+    },
+    {
+      "name": "add_replace",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "picard-wrapper",
+          "args": [
+            "AddOrReplaceReadGroups.jar",
+            "MAX_RECORDS_IN_RAM=5000000",
+            "TMP_DIR=.",
+            "I=20180318-115124-USB-003_deduped_reads.bam",
+            "O=20180318-115124-USB-003_addrepl.bam",
+            "RGID=USB-003",
+            "LB=USB-003",
+            "PL=Illumina",
+            "SM=USB-003",
+            "CN=BGI",
+            "RGPU=USB-003",
+            "VALIDATION_STRINGENCY=LENIENT",
+            "SORT_ORDER=coordinate",
+            "CREATE_INDEX=TRUE"
+          ]
+        }
+      },
+      "ins": [
+        10,
+        120,
+        121
+      ],
+      "outs": [
+        122,
+        123
+      ]
+    },
+    {
+      "name": "realign_target_creator",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "RealignerTargetCreator",
+            "-nt",
+            "2",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_addrepl.bam",
+            "-o",
+            "20180318-115124-USB-003_intervals.list"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        123,
+        9,
+        122,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        124
+      ]
+    },
+    {
+      "name": "indel_realign",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "IndelRealigner",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_addrepl.bam",
+            "-targetIntervals",
+            "20180318-115124-USB-003_intervals.list",
+            "-o",
+            "20180318-115124-USB-003_indel_realigned.bam"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        123,
+        9,
+        122,
+        10,
+        11,
+        124,
+        12
+      ],
+      "outs": [
+        125,
+        126
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr01",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr01.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        127,
+        128
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr02",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr02.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        129,
+        130
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr03",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr03.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        131,
+        132
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr04",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr04.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        133,
+        134
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr05",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr05.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        135,
+        136
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr06",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr06.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        137,
+        138
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr07",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr07.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        139,
+        140
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr08",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr08.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        141,
+        142
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr09",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr09.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        143,
+        144
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr10",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr10.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        145,
+        146
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr11",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr11.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        147,
+        148
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr12",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr12.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        149,
+        150
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr13",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr13.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        151,
+        152
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr14",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr14.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        153,
+        154
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr15",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr15.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        155,
+        156
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr16",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr16.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        157,
+        158
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr17",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr17.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        159,
+        160
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr18",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr18.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        161,
+        162
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr19",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr19.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        163,
+        164
+      ]
+    },
+    {
+      "name": "haplotype_caller",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "HaplotypeCaller",
+            "--emitRefConfidence",
+            "GVCF",
+            "--variant_index_type",
+            "LINEAR",
+            "--variant_index_parameter",
+            "128000",
+            "-L",
+            "Chr20",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-I",
+            "20180318-115124-USB-003_indel_realigned.bam",
+            "-o",
+            "20180318-115124-USB-003_Chr20.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        125,
+        9,
+        126,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        165,
+        166
+      ]
+    },
+    {
+      "name": "merge_gcvf",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "CombineGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-mergeGVCF.vcf",
+            "--variant",
+            "haplotype-files.list"
+          ]
+        }
+      },
+      "ins": [
+        89,
+        35,
+        109,
+        56,
+        42,
+        105,
+        85,
+        58,
+        11,
+        34,
+        157,
+        151,
+        86,
+        110,
+        12,
+        166,
+        81,
+        29,
+        80,
+        82,
+        167,
+        158,
+        165,
+        159,
+        164,
+        106,
+        47,
+        142,
+        50,
+        78,
+        41,
+        62,
+        55,
+        94,
+        108,
+        130,
+        163,
+        84,
+        112,
+        137,
+        136,
+        148,
+        76,
+        127,
+        57,
+        10,
+        161,
+        88,
+        5,
+        83,
+        37,
+        91,
+        92,
+        33,
+        31,
+        101,
+        46,
+        100,
+        154,
+        59,
+        107,
+        48,
+        93,
+        6,
+        147,
+        9,
+        23,
+        146,
+        51,
+        53,
+        128,
+        24,
+        40,
+        54,
+        27,
+        49,
+        79,
+        30,
+        162,
+        28,
+        111,
+        133,
+        45,
+        90,
+        1,
+        7,
+        61,
+        138,
+        104,
+        52,
+        132,
+        32,
+        139,
+        152,
+        102,
+        4,
+        153,
+        149,
+        145,
+        43,
+        160,
+        144,
+        113,
+        26,
+        141,
+        129,
+        97,
+        155,
+        95,
+        87,
+        114,
+        39,
+        60,
+        36,
+        96,
+        156,
+        3,
+        99,
+        134,
+        150,
+        25,
+        103,
+        38,
+        44,
+        75,
+        135,
+        140,
+        143,
+        77,
+        98,
+        131
+      ],
+      "outs": [
+        168,
+        169
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr01.vcf",
+            "-L",
+            "Chr01",
+            "--variant",
+            "20180318-115124-USB-001_Chr01.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr01.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr01.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        75,
+        3,
+        4,
+        5,
+        6,
+        7,
+        128,
+        9,
+        76,
+        127,
+        23,
+        10,
+        24,
+        11,
+        12
+      ],
+      "outs": [
+        170,
+        171
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr02.vcf",
+            "-L",
+            "Chr02",
+            "--variant",
+            "20180318-115124-USB-001_Chr02.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr02.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr02.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        129,
+        78,
+        3,
+        4,
+        5,
+        6,
+        7,
+        77,
+        9,
+        130,
+        25,
+        10,
+        26,
+        11,
+        12
+      ],
+      "outs": [
+        172,
+        173
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr03.vcf",
+            "-L",
+            "Chr03",
+            "--variant",
+            "20180318-115124-USB-001_Chr03.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr03.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr03.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        27,
+        3,
+        4,
+        5,
+        79,
+        6,
+        7,
+        28,
+        9,
+        131,
+        132,
+        10,
+        11,
+        80,
+        12
+      ],
+      "outs": [
+        174,
+        175
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr04.vcf",
+            "-L",
+            "Chr04",
+            "--variant",
+            "20180318-115124-USB-001_Chr04.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr04.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr04.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        81,
+        3,
+        4,
+        5,
+        29,
+        6,
+        7,
+        133,
+        82,
+        9,
+        134,
+        10,
+        11,
+        30,
+        12
+      ],
+      "outs": [
+        176,
+        177
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr05.vcf",
+            "-L",
+            "Chr05",
+            "--variant",
+            "20180318-115124-USB-001_Chr05.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr05.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr05.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        31,
+        9,
+        83,
+        84,
+        135,
+        10,
+        32,
+        11,
+        136,
+        12
+      ],
+      "outs": [
+        178,
+        179
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr06.vcf",
+            "-L",
+            "Chr06",
+            "--variant",
+            "20180318-115124-USB-001_Chr06.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr06.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr06.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        33,
+        3,
+        137,
+        4,
+        5,
+        6,
+        7,
+        138,
+        9,
+        34,
+        85,
+        10,
+        86,
+        11,
+        12
+      ],
+      "outs": [
+        180,
+        181
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr07.vcf",
+            "-L",
+            "Chr07",
+            "--variant",
+            "20180318-115124-USB-001_Chr07.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr07.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr07.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        139,
+        3,
+        35,
+        4,
+        5,
+        6,
+        7,
+        87,
+        9,
+        88,
+        36,
+        10,
+        140,
+        11,
+        12
+      ],
+      "outs": [
+        182,
+        183
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr08.vcf",
+            "-L",
+            "Chr08",
+            "--variant",
+            "20180318-115124-USB-001_Chr08.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr08.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr08.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        89,
+        141,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        142,
+        37,
+        10,
+        11,
+        38,
+        90,
+        12
+      ],
+      "outs": [
+        184,
+        185
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr09.vcf",
+            "-L",
+            "Chr09",
+            "--variant",
+            "20180318-115124-USB-001_Chr09.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr09.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr09.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        143,
+        6,
+        7,
+        9,
+        39,
+        144,
+        40,
+        91,
+        10,
+        92,
+        11,
+        12
+      ],
+      "outs": [
+        186,
+        187
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr10.vcf",
+            "-L",
+            "Chr10",
+            "--variant",
+            "20180318-115124-USB-001_Chr10.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr10.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr10.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        41,
+        3,
+        4,
+        5,
+        93,
+        6,
+        7,
+        42,
+        9,
+        145,
+        10,
+        146,
+        11,
+        94,
+        12
+      ],
+      "outs": [
+        188,
+        189
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr11.vcf",
+            "-L",
+            "Chr11",
+            "--variant",
+            "20180318-115124-USB-001_Chr11.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr11.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr11.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        96,
+        3,
+        4,
+        5,
+        147,
+        6,
+        7,
+        95,
+        148,
+        9,
+        43,
+        10,
+        44,
+        11,
+        12
+      ],
+      "outs": [
+        190,
+        191
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr12.vcf",
+            "-L",
+            "Chr12",
+            "--variant",
+            "20180318-115124-USB-001_Chr12.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr12.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr12.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        149,
+        97,
+        3,
+        4,
+        5,
+        6,
+        7,
+        150,
+        9,
+        98,
+        45,
+        10,
+        46,
+        11,
+        12
+      ],
+      "outs": [
+        192,
+        193
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr13.vcf",
+            "-L",
+            "Chr13",
+            "--variant",
+            "20180318-115124-USB-001_Chr13.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr13.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr13.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        48,
+        3,
+        99,
+        4,
+        5,
+        6,
+        7,
+        47,
+        9,
+        151,
+        100,
+        10,
+        152,
+        11,
+        12
+      ],
+      "outs": [
+        194,
+        195
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr14.vcf",
+            "-L",
+            "Chr14",
+            "--variant",
+            "20180318-115124-USB-001_Chr14.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr14.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr14.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        49,
+        4,
+        5,
+        6,
+        7,
+        153,
+        101,
+        9,
+        50,
+        102,
+        10,
+        154,
+        11,
+        12
+      ],
+      "outs": [
+        196,
+        197
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr15.vcf",
+            "-L",
+            "Chr15",
+            "--variant",
+            "20180318-115124-USB-001_Chr15.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr15.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr15.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        51,
+        3,
+        4,
+        5,
+        155,
+        6,
+        7,
+        9,
+        52,
+        103,
+        10,
+        104,
+        11,
+        156,
+        12
+      ],
+      "outs": [
+        198,
+        199
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr16.vcf",
+            "-L",
+            "Chr16",
+            "--variant",
+            "20180318-115124-USB-001_Chr16.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr16.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr16.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        157,
+        4,
+        5,
+        6,
+        7,
+        53,
+        9,
+        106,
+        105,
+        158,
+        10,
+        54,
+        11,
+        12
+      ],
+      "outs": [
+        200,
+        201
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr17.vcf",
+            "-L",
+            "Chr17",
+            "--variant",
+            "20180318-115124-USB-001_Chr17.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr17.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr17.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        107,
+        159,
+        3,
+        4,
+        5,
+        55,
+        6,
+        7,
+        108,
+        9,
+        160,
+        10,
+        11,
+        56,
+        12
+      ],
+      "outs": [
+        202,
+        203
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr18.vcf",
+            "-L",
+            "Chr18",
+            "--variant",
+            "20180318-115124-USB-001_Chr18.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr18.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr18.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        109,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        161,
+        110,
+        57,
+        162,
+        10,
+        58,
+        11,
+        12
+      ],
+      "outs": [
+        204,
+        205
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr19.vcf",
+            "-L",
+            "Chr19",
+            "--variant",
+            "20180318-115124-USB-001_Chr19.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr19.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr19.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        111,
+        112,
+        3,
+        4,
+        5,
+        59,
+        6,
+        7,
+        9,
+        163,
+        60,
+        10,
+        11,
+        164,
+        12
+      ],
+      "outs": [
+        206,
+        207
+      ]
+    },
+    {
+      "name": "genotype_gvcfs",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "GenotypeGVCFs",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-GVCF_Chr20.vcf",
+            "-L",
+            "Chr20",
+            "--variant",
+            "20180318-115124-USB-001_Chr20.vcf",
+            "--variant",
+            "20180318-115124-USB-002_Chr20.vcf",
+            "--variant",
+            "20180318-115124-USB-003_Chr20.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        166,
+        3,
+        4,
+        5,
+        165,
+        6,
+        7,
+        61,
+        9,
+        113,
+        10,
+        62,
+        11,
+        114,
+        12
+      ],
+      "outs": [
+        208,
+        209
+      ]
+    },
+    {
+      "name": "combine_variants",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "CombineVariants",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-o",
+            "20180318-115124-All.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr01.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr02.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr03.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr04.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr05.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr06.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr07.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr08.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr09.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr10.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr11.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr12.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr13.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr14.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr15.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr16.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr17.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr18.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr19.vcf",
+            "--variant",
+            "20180318-115124-GVCF_Chr20.vcf"
+          ]
+        }
+      },
+      "ins": [
+        174,
+        208,
+        4,
+        177,
+        6,
+        184,
+        172,
+        9,
+        178,
+        173,
+        175,
+        11,
+        209,
+        187,
+        170,
+        188,
+        193,
+        185,
+        192,
+        182,
+        180,
+        197,
+        10,
+        196,
+        194,
+        3,
+        198,
+        203,
+        5,
+        190,
+        202,
+        183,
+        207,
+        189,
+        179,
+        186,
+        205,
+        201,
+        12,
+        1,
+        195,
+        171,
+        7,
+        191,
+        176,
+        181,
+        204,
+        206,
+        199,
+        200
+      ],
+      "outs": [
+        210,
+        211
+      ]
+    },
+    {
+      "name": "select_variants_snp",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "SelectVariants",
+            "-nt",
+            "2",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-selectType",
+            "SNP",
+            "-V",
+            "20180318-115124-All.vcf",
+            "-o",
+            "20180318-115124-All.vcf_snp_only.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        211,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        212
+      ]
+    },
+    {
+      "name": "filtering_snp",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "VariantFiltration",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-V",
+            "20180318-115124-All.vcf_snp_only.vcf",
+            "--filterExpression",
+            "QD < 2.0 || FS > 60.0 || MQ < 40.0 || Haplotypescore > 20.0",
+            "--filterName",
+            "my_snp_filter",
+            "-o",
+            "20180318-115124-All_filtered_snp.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        212,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        213,
+        214
+      ]
+    },
+    {
+      "name": "select_variants_indel",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "SelectVariants",
+            "-nt",
+            "2",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-selectType",
+            "INDEL",
+            "-V",
+            "20180318-115124-All.vcf",
+            "-o",
+            "20180318-115124-All.vcf_indel_only.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        211,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        215
+      ]
+    },
+    {
+      "name": "filtering_indel",
+      "function": "command",
+      "type": "dataflow",
+      "executor": "syscommand",
+      "firingLimit": 1,
+      "config": {
+        "executor": {
+          "executable": "gatk-wrapper",
+          "args": [
+            "-T",
+            "VariantFiltration",
+            "-R",
+            "/data/Gmax_275_v2.0.fa",
+            "-V",
+            "20180318-115124-All.vcf_indel_only.vcf",
+            "--filterExpression",
+            "QD < 2.0 || FS > 200.0 || MQ < 40 || Haplotypescore > 20.0",
+            "--filterName",
+            "my_indel_filter",
+            "-o",
+            "20180318-115124-All_filtered_indel.vcf"
+          ]
+        }
+      },
+      "ins": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        215,
+        10,
+        11,
+        12
+      ],
+      "outs": [
+        216,
+        217
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "name": "software.tar.gz",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/Gmax_275_v2.0.fa.sa",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/USB-001_2.fastq",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/Gmax_275_v2.0.fa",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/Gmax_275_v2.0.fa.amb",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/Gmax_275_v2.0.fa.bwt",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/Gmax_275_v2.0.fa.ann",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/Gmax_275_v2.0.fa.pac",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/USB-001_1.fastq",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/chromosome.txt",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "software.tar.gz",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/Gmax_275_v2.0.dict",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/Gmax_275_v2.0.fa.fai",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "20180318-115124-USB-001_aligned_reads.sam"
+    },
+    {
+      "name": "20180318-115124-USB-001_sorted_reads.bai"
+    },
+    {
+      "name": "20180318-115124-USB-001_sorted_reads.bam"
+    },
+    {
+      "name": "20180318-115124-USB-001_deduped_reads.bai"
+    },
+    {
+      "name": "20180318-115124-USB-001_deduped_reads.bam"
+    },
+    {
+      "name": "20180318-115124-USB-001_addrepl.bam"
+    },
+    {
+      "name": "20180318-115124-USB-001_addrepl.bai"
+    },
+    {
+      "name": "20180318-115124-USB-001_intervals.list"
+    },
+    {
+      "name": "20180318-115124-USB-001_indel_realigned.bam"
+    },
+    {
+      "name": "20180318-115124-USB-001_indel_realigned.bai"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr01.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr01.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr02.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr02.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr03.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr03.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr04.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr04.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr05.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr05.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr06.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr06.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr07.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr07.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr08.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr08.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr09.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr09.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr10.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr10.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr11.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr11.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr12.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr12.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr13.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr13.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr14.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr14.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr15.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr15.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr16.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr16.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr17.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr17.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr18.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr18.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr19.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr19.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr20.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-001_Chr20.vcf.idx"
+    },
+    {
+      "name": "/data/USB-002_2.fastq",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/USB-002_1.fastq",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "20180318-115124-USB-002_aligned_reads.sam"
+    },
+    {
+      "name": "20180318-115124-USB-002_sorted_reads.bai"
+    },
+    {
+      "name": "20180318-115124-USB-002_sorted_reads.bam"
+    },
+    {
+      "name": "20180318-115124-USB-002_deduped_reads.bam"
+    },
+    {
+      "name": "20180318-115124-USB-002_deduped_reads.bai"
+    },
+    {
+      "name": "20180318-115124-USB-002_addrepl.bam"
+    },
+    {
+      "name": "20180318-115124-USB-002_addrepl.bai"
+    },
+    {
+      "name": "20180318-115124-USB-002_intervals.list"
+    },
+    {
+      "name": "20180318-115124-USB-002_indel_realigned.bam"
+    },
+    {
+      "name": "20180318-115124-USB-002_indel_realigned.bai"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr01.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr01.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr02.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr02.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr03.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr03.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr04.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr04.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr05.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr05.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr06.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr06.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr07.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr07.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr08.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr08.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr09.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr09.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr10.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr10.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr11.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr11.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr12.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr12.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr13.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr13.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr14.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr14.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr15.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr15.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr16.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr16.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr17.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr17.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr18.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr18.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr19.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr19.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr20.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-002_Chr20.vcf"
+    },
+    {
+      "name": "/data/USB-003_1.fastq",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "/data/USB-003_2.fastq",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "20180318-115124-USB-003_aligned_reads.sam"
+    },
+    {
+      "name": "20180318-115124-USB-003_sorted_reads.bai"
+    },
+    {
+      "name": "20180318-115124-USB-003_sorted_reads.bam"
+    },
+    {
+      "name": "20180318-115124-USB-003_deduped_reads.bam"
+    },
+    {
+      "name": "20180318-115124-USB-003_deduped_reads.bai"
+    },
+    {
+      "name": "20180318-115124-USB-003_addrepl.bai"
+    },
+    {
+      "name": "20180318-115124-USB-003_addrepl.bam"
+    },
+    {
+      "name": "20180318-115124-USB-003_intervals.list"
+    },
+    {
+      "name": "20180318-115124-USB-003_indel_realigned.bai"
+    },
+    {
+      "name": "20180318-115124-USB-003_indel_realigned.bam"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr01.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr01.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr02.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr02.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr03.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr03.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr04.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr04.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr05.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr05.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr06.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr06.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr07.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr07.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr08.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr08.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr09.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr09.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr10.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr10.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr11.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr11.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr12.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr12.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr13.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr13.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr14.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr14.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr15.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr15.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr16.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr16.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr17.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr17.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr18.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr18.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr19.vcf"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr19.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr20.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-USB-003_Chr20.vcf"
+    },
+    {
+      "name": "haplotype-files.list",
+      "data": [
+        {}
+      ]
+    },
+    {
+      "name": "20180318-115124-mergeGVCF.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-mergeGVCF.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr01.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr01.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr02.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr02.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr03.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr03.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr04.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr04.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr05.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr05.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr06.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr06.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr07.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr07.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr08.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr08.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr09.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr09.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr10.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr10.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr11.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr11.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr12.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr12.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr13.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr13.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr14.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr14.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr15.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr15.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr16.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr16.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr17.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr17.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr18.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr18.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr19.vcf"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr19.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr20.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-GVCF_Chr20.vcf"
+    },
+    {
+      "name": "20180318-115124-All.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-All.vcf"
+    },
+    {
+      "name": "20180318-115124-All.vcf_snp_only.vcf"
+    },
+    {
+      "name": "20180318-115124-All_filtered_snp.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-All_filtered_snp.vcf"
+    },
+    {
+      "name": "20180318-115124-All.vcf_indel_only.vcf"
+    },
+    {
+      "name": "20180318-115124-All_filtered_indel.vcf.idx"
+    },
+    {
+      "name": "20180318-115124-All_filtered_indel.vcf"
+    }
+  ]
+}
