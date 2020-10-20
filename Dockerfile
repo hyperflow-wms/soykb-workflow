@@ -6,7 +6,7 @@ MAINTAINER Bartosz Balis <balis@agh.edu.pl>
 ARG hf_job_executor_version
 ENV HYPERFLOW_JOB_EXECUTOR_VERSION=$hf_job_executor_version
 
-ENV NODE_VERSION=12.18.3-r0
+ENV NODE_VERSION=12.18.4-r0
 
 RUN apk --update add openjdk7-jre \
  && apk add curl bash \
