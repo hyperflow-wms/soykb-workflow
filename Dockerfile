@@ -1,16 +1,14 @@
-FROM alpine:3.12
-MAINTAINER Bartosz Balis <balis@agh.edu.pl>
+FROM node:18.20.1-alpine3.18
 
 # Version of the job executor should be passed via docker build, e.g.: 
 # docker build --build-arg hf_job_executor_version="1.1.0""
 ARG hf_job_executor_version
 ENV HYPERFLOW_JOB_EXECUTOR_VERSION=$hf_job_executor_version
 
-ENV NODE_VERSION=12.18.4-r0
+ENV NODE_VERSION=18.20.1-r0
 
 RUN apk --update add openjdk7-jre \
  && apk add curl bash \
- && apk add npm=$NODE_VERSION nodejs=$NODE_VERSION \
  && apk add python3 libpcap libpcap-dev util-linux
 
 RUN npm install -g @hyperflow/job-executor@${HYPERFLOW_JOB_EXECUTOR_VERSION}
@@ -36,3 +34,10 @@ RUN chmod +x ./build.sh
 RUN ./build.sh
 RUN mkdir /fbam
 RUN cp -r ./build/libblockaccess.so.${FBAM_VERSION} /fbam/libfbam.so
+
+# Required for running NodeJS application as process with non primary PID.
+# NodeJS application with PID 1 are not properly receiving signals like SIGTERM
+# https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#handling-kernel-signals
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64
+RUN chmod +x /usr/local/bin/dumb-init
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
