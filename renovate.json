@@ -1,0 +1,29 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommitsDisabled"
+  ],
+  "enabledManagers": [
+    "custom.regex"
+  ],
+  "labels": [
+    "dependencies",
+    "release-chain"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "job-executor version pinned in the worker Makefile",
+      "fileMatch": [
+        "Makefile"
+      ],
+      "matchStrings": [
+        "HF_JOB_EXECUTOR_VERSION\\s*\\??=\\s*['\"]?(?<currentValue>\\d+\\.\\d+\\.\\d+)['\"]?"
+      ],
+      "depNameTemplate": "@hyperflow/job-executor",
+      "datasourceTemplate": "npm"
+    }
+  ]
+}

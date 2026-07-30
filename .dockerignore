@@ -1,0 +1,10 @@
+# The build context is the repo root, but the Dockerfile only reads software/.
+# Without this, .git alone adds 169 MB to every build context.
+.git
+.github
+.gitignore
+.dockerignore
+.travis.yml
+Makefile
+README.md
+data-container

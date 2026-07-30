@@ -1,8 +1,9 @@
 VER = $(shell git describe --tags --always)
 PREFIX = hyperflowwms
 REPO_NAME = soykb-worker
-JOB_EXECUTOR_SHORT='je'
-HF_JOB_EXECUTOR_VERSION='1.4.1'
+JOB_EXECUTOR_SHORT = je
+# ?= so CI and Renovate can override the version from the environment
+HF_JOB_EXECUTOR_VERSION ?= 1.4.1
 TAG=$(JOB_EXECUTOR_SHORT)-$(HF_JOB_EXECUTOR_VERSION)-$(VER)
 
 all: push
