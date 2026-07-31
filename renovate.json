@@ -16,7 +16,7 @@
     {
       "customType": "regex",
       "description": "job-executor version pinned in the worker Makefile",
-      "fileMatch": [
+      "managerFilePatterns": [
         "Makefile"
       ],
       "matchStrings": [
