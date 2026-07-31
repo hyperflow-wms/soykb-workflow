@@ -27,16 +27,12 @@ jobs:
       DO_PUSH: ${{ github.event_name == 'push' || inputs.push }}
       HAVE_DOCKERHUB: ${{ secrets.DOCKERHUB_USERNAME != '' }}
     steps:
+      # A shallow clone is enough: the tag comes from VERSION in the Makefile,
+      # not from git history.
       - uses: actions/checkout@v4
-        with:
-          # The Makefile derives the tag from `git describe --tags`; a shallow
-          # clone silently degrades it to a bare commit sha.
-          fetch-depth: 0
 
-      - name: Show the tag the Makefile derives
-        run: |
-          git describe --tags --always
-          make -n image | head -2
+      - name: Show the tags the Makefile will build
+        run: make -n image | head -2
 
       - name: Login to Docker Hub
         if: env.HAVE_DOCKERHUB == 'true'
