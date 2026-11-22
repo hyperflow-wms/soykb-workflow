@@ -3,7 +3,7 @@ REPO_NAME = soykb-worker
 # Workflow version, bumped by hand when the image itself changes
 VERSION = 1.2
 # ?= so CI and Renovate can override the version from the environment
-HF_JOB_EXECUTOR_VERSION ?= 1.4.2
+HF_JOB_EXECUTOR_VERSION ?= 1.4.3
 TAG = $(VERSION)-je$(HF_JOB_EXECUTOR_VERSION)
 
 all: push
